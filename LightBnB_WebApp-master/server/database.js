@@ -18,17 +18,20 @@ const pool = new Pool ({
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithEmail = function(email) {
-  let user;
-  for (const userId in users) {
-    user = users[userId];
-    if (user.email.toLowerCase() === email.toLowerCase()) {
-      break;
-    } else {
-      user = null;
+  return pool
+  //query from entire users table to get all fields for eventual login. Email will be inputted by client so need to parameterize
+  .query(`SELECT * FROM users WHERE email = $1`, [email])
+  .then((result) => {
+     if(result.rows.length) {
+       //returns the entire object of the email inputted
+     return result.rows[0];
     }
-  }
-  return Promise.resolve(user);
-}
+    return null;
+  })
+  .catch((err) => {
+    return console.log('ERROR:', err.message); 
+  });
+};
 exports.getUserWithEmail = getUserWithEmail;
 
 /**
@@ -37,8 +40,18 @@ exports.getUserWithEmail = getUserWithEmail;
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithId = function(id) {
-  return Promise.resolve(users[id]);
-}
+  return pool
+  .query(`SELECT * FROM users WHERE id = $1`, [id])
+  .then((result) => {
+     if(result.rows.length) {
+     return result.rows[0];
+    }
+    return null;
+  })
+  .catch((err) => {
+    return console.log('ERROR:', err.message); 
+  });
+};
 exports.getUserWithId = getUserWithId;
 
 
@@ -48,10 +61,13 @@ exports.getUserWithId = getUserWithId;
  * @return {Promise<{}>} A promise to the user.
  */
 const addUser =  function(user) {
-  const userId = Object.keys(users).length + 1;
-  user.id = userId;
-  users[userId] = user;
-  return Promise.resolve(user);
+  const { name, email, password } = user;
+  const sqlQuery = `
+  INSERT INTO users (name, email, password)
+  VALUES
+  ($1, $2, $3)
+  RETURNING *`;
+  return pool.query(sqlQuery, [name, email, password]);
 }
 exports.addUser = addUser;
 
@@ -86,12 +102,6 @@ exports.getAllReservations = getAllReservations;
       console.log('ERROR:', err.message); //prints terminal unexpectedly ended comment
     });
 };
-  // const limitedProperties = {};
-  // for (let i = 1; i <= limit; i++) {
-  //   limitedProperties[i] = properties[i];
-  // }
-  // return Promise.resolve(limitedProperties);
-//};
 exports.getAllProperties = getAllProperties;
 
 
