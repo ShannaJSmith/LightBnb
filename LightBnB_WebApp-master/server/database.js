@@ -126,8 +126,10 @@ The % syntax for the LIKE clause must be part of the parameter, not the query. *
     } else {
       queryString += ` AND city LIKE $${queryParams.length} `;
     }
+    // CAN SIMPLY CODE BY REPLACING ABOVE WITH TERANARY OPERATOR: 
+    //queryString += queryString.includes('WHERE') ? ` AND city LIKE $${queryParams.length} ` : `WHERE city LIKE $${queryParams.length} `
   }
-
+  
   if (options.owner_id) {
     queryParams.push(options.owner_id);
     if (!queryString.includes('WHERE')) {
